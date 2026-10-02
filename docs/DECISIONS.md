@@ -97,6 +97,79 @@ Newest entries go at the bottom. Each entry records the decision, the reason, an
 
 ---
 
+## D-011 | 2026-10-02 | Repo and package layout
+
+**Decision.** Python package in a `src/` layout (`src/prevalence/`), installed with `pip install -e ".[dev]"`. Per-pilot configs in `configs/<pilot>/`, counts in `data/<pilot>/`, generated outputs in `runs/`. Test fixtures live in `tests/fixtures/` and are separate from real pilot configs. `data/`, `runs/`, and `*.xlsx` are git-ignored; `configs/` is committed so runs stay reproducible.
+
+**Why.** The src layout prevents accidental imports from the wrong place. Separating fixtures from real configs means pilot changes cannot break tests. Committing configs supports the reproducibility goal in D-007.
+
+**Note.** If pilot names or SME priors are business-sensitive, keep the repo private or use placeholder names in committed configs.
+
+---
+
+## D-012 | 2026-10-02 | Single stratification dimension in v1
+
+**Decision.** A run defines at most one stratification dimension (for example plan type). Config validation rejects two or more.
+
+**Why.** Counts carry a single stratum label. Supporting several dimensions means cross-product strata, which adds complexity before the core is proven.
+
+**Deferred.** Multi-dimension stratification.
+
+---
+
+## D-013 | 2026-10-02 | Stratum labels are all-or-nothing
+
+**Decision.** If a run defines strata, every counts row must carry a known stratum label. If a run defines no strata, counts rows must not carry one. Violations fail at load time.
+
+**Why.** Prevents data from being silently pooled or misassigned.
+
+---
+
+## D-014 | 2026-10-02 | Counts pooled across strata until step 4
+
+**Decision.** `ConjugateBetaModel` currently pools counts across strata into one posterior per variant. Per-stratum and combined posteriors arrive with `StratifiedPosterior` (build step 4).
+
+**Why.** Keeps step 2 small enough to validate fully against Monte Carlo before adding stratification.
+
+---
+
+## D-015 | 2026-10-02 | No policy defaults in code
+
+**Decision.** Policy values such as `recommendation.borderline_multiple` are required in YAML, not defaulted in code. Config validation also checks that shares sum to 1, `max_practical_sample_size` does not exceed `population_per_window`, variant names are unique, parents exist, and parent chains have no cycles.
+
+**Why.** Supports the "nothing hardcoded" rule (D-009) and makes bad configs fail loudly at load time.
+
+---
+
+## D-016 | 2026-10-02 | Capture probability can plateau below the target
+
+**Decision.** The planner must handle variants whose target probability is unreachable at any sample size, and report them as such rather than searching to the population cap.
+
+**Why.** Found while testing: for a Beta(3, 97) posterior and N = 20, P(X >= N) is about 0.97 at S = 3000 and approaches P(p > N/S), not 1. Vague priors leave posterior mass at very low prevalence, which no sample size removes. A high M% can therefore be unreachable for some variants.
+
+**Note.** The closed form is validated against Monte Carlo simulation (four parameter sets); that test is permanent.
+
+---
+
+## Session summary: 2026-10-02
+
+**Built.** Config and domain classes with validation; `BetaPosterior`, `ConjugateBetaModel`, and `ModelFactory`; 35 passing tests, including the Monte Carlo check. Repo is linked to GitHub and the Project.
+
+**Next step.** Build step 3: `CapturePlanner` with `capture_curve` and the minimum-sample-size binary search, including the unreachable-target case from D-016.
+
+Replace the "Open questions" section with:
+
+markdown
+## Open questions
+
+- Exact thresholds for the recommendation flags (what multiple of the practical sample-size limit counts as Borderline).
+- How the planner should label an unreachable target (a new flag, or the existing "infeasible" reason).
+- Allocation rule across strata for the combined view (proportional is assumed).
+- Whether multi-dimension stratification is needed, and how to handle it (cross-product strata).
+- Whether the stakeholder report needs charts in addition to tables.
+- How SME priors will be elicited and documented (raw Beta parameters are stored in config, with a `source` label).
+- Whether pilot names or priors need to stay out of the repo (see D-011).
+
 ## Open questions
 
 - Exact thresholds for the recommendation flags (what multiple of the practical sample-size limit counts as Borderline).
