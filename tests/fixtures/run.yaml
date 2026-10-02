@@ -1,0 +1,16 @@
+pilot: pilot_a
+model: conjugate_beta
+target_n: 20
+target_prob: 0.90
+sample_sizes: {start: 50, stop: 5000, step: 50}
+max_practical_sample_size: 2000
+population_per_window: 12000
+stratum_view: both
+strata:
+  plan_type:
+    401k: 0.7
+    403b: 0.3
+recommendation:
+  borderline_multiple: 1.5
+output:
+  excel: true

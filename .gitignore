@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Real pilot data and outputs stay out of git
+data/
+*.xlsx
+runs/
+
+# Editor
+.vscode/

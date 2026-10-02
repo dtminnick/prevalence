@@ -1,0 +1,9 @@
+variants:
+  - name: NIGO
+    prior: {a: 2, b: 18, source: SME}
+  - name: NIGO - Missing Plan Signature
+    parent: NIGO
+    prior: {a: 1, b: 40, source: SME}
+    target_n: 10
+  - name: Not NIGO
+    prior: {a: 18, b: 2, source: SME}
